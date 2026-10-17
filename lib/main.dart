@@ -14,7 +14,7 @@ import 'package:latlong2/latlong.dart';
 // Backend server address.
 // PC demo:            http://localhost:5000
 // Phone on same WiFi: http://<PC-IP>:5000  (e.g. http://10.146.52.87:5000)
-const String baseUrl = 'http://10.146.52.87:5000';
+const String baseUrl = 'https://ambulance-alert-app.onrender.com';
 
 // Junctions for route selection (edit as needed)
 const List<String> allJunctions = [
