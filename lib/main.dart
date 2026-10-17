@@ -9,13 +9,14 @@ import 'package:http/http.dart' as http;
 import 'package:latlong2/latlong.dart';
 
 // ============================================================
-// SETTINGS - SIRF YAHAN BADLAO
+// SETTINGS - CHANGE ONLY HERE
 // ============================================================
-// Backend server ka address. Same WiFi par PC ka IP, jaise:
-// http://192.168.1.5:5000   ya deploy ka link: https://xyz.onrender.com
-const String baseUrl = 'http://192.168.1.5:5000';
+// Backend server address.
+// PC demo:            http://localhost:5000
+// Phone on same WiFi: http://<PC-IP>:5000  (e.g. http://192.168.1.5:5000)
+const String baseUrl = 'http://localhost:5000';
 
-// Route selection ke liye junctions (apne hisaab se badlo)
+// Junctions for route selection (edit as needed)
 const List<String> allJunctions = [
   'Junction-1',
   'Junction-2',
@@ -68,7 +69,7 @@ class ModeSelectScreen extends StatelessWidget {
             const Icon(Icons.emergency, size: 90, color: Colors.red),
             const SizedBox(height: 16),
             const Text(
-              'Apna mode select karein',
+              'Select your mode',
               textAlign: TextAlign.center,
               style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
             ),
@@ -117,7 +118,7 @@ class ModeSelectScreen extends StatelessWidget {
 
 // ============================================================
 // SCREEN 2: DRIVER MODE
-// (Purana dashboard + Map + GPS + Route + live location)
+// (Dashboard + Map + GPS + Route + live location)
 // ============================================================
 class DriverScreen extends StatefulWidget {
   const DriverScreen({super.key});
@@ -135,14 +136,13 @@ class _DriverScreenState extends State<DriverScreen> {
   LatLng? _current;
   final List<String> _selectedRoute = [];
 
-  // Purane code wale variables
   bool isEmergencyActive = false;
   String trafficStatus = "GREEN (Clear Route)";
 
   Future<bool> _checkPermission() async {
     bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
     if (!serviceEnabled) {
-      setState(() => trafficStatus = 'Phone ka GPS/Location ON karein');
+      setState(() => trafficStatus = 'Please turn ON phone GPS/Location');
       return false;
     }
     LocationPermission perm = await Geolocator.checkPermission();
@@ -151,7 +151,7 @@ class _DriverScreenState extends State<DriverScreen> {
     }
     if (perm == LocationPermission.denied ||
         perm == LocationPermission.deniedForever) {
-      setState(() => trafficStatus = 'Location permission nahi mili');
+      setState(() => trafficStatus = 'Location permission denied');
       return false;
     }
     return true;
@@ -167,7 +167,7 @@ class _DriverScreenState extends State<DriverScreen> {
 
   Future<void> _startEmergency() async {
     if (_selectedRoute.isEmpty) {
-      setState(() => trafficStatus = 'Pehle route (junctions) select karein');
+      setState(() => trafficStatus = 'Please select a route (junctions) first');
       return;
     }
     if (!await _checkPermission()) return;
@@ -179,7 +179,7 @@ class _DriverScreenState extends State<DriverScreen> {
 
     const settings = LocationSettings(
       accuracy: LocationAccuracy.high,
-      distanceFilter: 5, // har 5 meter par update
+      distanceFilter: 5, // update every 5 meters
     );
 
     _positionSub = Geolocator.getPositionStream(locationSettings: settings)
@@ -194,7 +194,7 @@ class _DriverScreenState extends State<DriverScreen> {
   void _stopEmergency() {
     _positionSub?.cancel();
     _positionSub = null;
-    // Server ko batao ki emergency khatam
+    // Tell the server the emergency has ended
     if (_current != null) {
       _sendLocation(
         Position(
@@ -228,7 +228,7 @@ class _DriverScreenState extends State<DriverScreen> {
               'ambulanceId': _ambulanceIdController.text.trim(),
               'lat': pos.latitude,
               'lng': pos.longitude,
-              'speed': pos.speed, // meter/second
+              'speed': pos.speed, // meters/second
               'route': _selectedRoute,
               'emergency': emergency,
               'timestamp': DateTime.now().toIso8601String(),
@@ -237,7 +237,7 @@ class _DriverScreenState extends State<DriverScreen> {
           .timeout(const Duration(seconds: 5));
     } catch (e) {
       if (mounted && isEmergencyActive) {
-        setState(() => trafficStatus = 'ALERT ON, par server se connect nahi ho paya');
+        setState(() => trafficStatus = 'ALERT ON, but cannot connect to server');
       }
     }
   }
@@ -262,7 +262,7 @@ class _DriverScreenState extends State<DriverScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            // ---------- Ambulance Status Card (purana) ----------
+            // ---------- Ambulance Status Card ----------
             Card(
               color: isEmergencyActive
                   ? Colors.red.shade100
@@ -296,7 +296,7 @@ class _DriverScreenState extends State<DriverScreen> {
             ),
             const SizedBox(height: 20),
 
-            // ---------- MAP (naya) ----------
+            // ---------- MAP ----------
             SizedBox(
               height: 220,
               child: ClipRRect(
@@ -337,7 +337,7 @@ class _DriverScreenState extends State<DriverScreen> {
               ),
             const SizedBox(height: 16),
 
-            // ---------- Ambulance ID + Route select (naya) ----------
+            // ---------- Ambulance ID + Route select ----------
             TextField(
               controller: _ambulanceIdController,
               enabled: !isEmergencyActive,
@@ -348,7 +348,7 @@ class _DriverScreenState extends State<DriverScreen> {
             ),
             const SizedBox(height: 12),
             const Text(
-              'Route select karein (junctions ko order me tap karein):',
+              'Select route (tap junctions in order):',
               style: TextStyle(fontWeight: FontWeight.bold),
             ),
             Wrap(
@@ -369,12 +369,12 @@ class _DriverScreenState extends State<DriverScreen> {
             const SizedBox(height: 6),
             Text(
               _selectedRoute.isEmpty
-                  ? 'Route: abhi koi nahi'
+                  ? 'Route: none selected'
                   : 'Route: ${_selectedRoute.join("  →  ")}',
             ),
             const SizedBox(height: 20),
 
-            // ---------- Traffic Signal Status Box (purana) ----------
+            // ---------- Traffic Signal Status Box ----------
             Container(
               padding: const EdgeInsets.all(15),
               decoration: BoxDecoration(
@@ -403,7 +403,7 @@ class _DriverScreenState extends State<DriverScreen> {
             ),
             const SizedBox(height: 30),
 
-            // ---------- Emergency Trigger Button (purana) ----------
+            // ---------- Emergency Trigger Button ----------
             ElevatedButton(
               onPressed: toggleEmergency,
               style: ElevatedButton.styleFrom(
@@ -447,7 +447,7 @@ class _PoliceLoginScreenState extends State<PoliceLoginScreen> {
   void _submit() {
     final id = _junctionController.text.trim();
     if (id.isEmpty) {
-      setState(() => _error = 'Junction ID likhna zaroori hai');
+      setState(() => _error = 'Junction ID is required');
       return;
     }
     Navigator.push(
@@ -480,7 +480,7 @@ class _PoliceLoginScreenState extends State<PoliceLoginScreen> {
             TextField(
               controller: _junctionController,
               decoration: InputDecoration(
-                labelText: 'Junction ID (jaise Junction-1)',
+                labelText: 'Junction ID (e.g. Junction-1)',
                 border: const OutlineInputBorder(),
                 errorText: _error,
               ),
@@ -492,7 +492,7 @@ class _PoliceLoginScreenState extends State<PoliceLoginScreen> {
               height: 50,
               child: ElevatedButton(
                 onPressed: _submit,
-                child: const Text('Alerts Receive Karna Shuru Karein',
+                child: const Text('Start Receiving Alerts',
                     style: TextStyle(fontSize: 16)),
               ),
             ),
@@ -522,7 +522,7 @@ class _PoliceAlertScreenState extends State<PoliceAlertScreen> {
   bool _siren = false;
   int? _etaSeconds;
   String _ambulanceId = '';
-  String _info = 'Server se alert ka wait...';
+  String _info = 'Waiting for alerts from server...';
 
   @override
   void initState() {
@@ -550,19 +550,18 @@ class _PoliceAlertScreenState extends State<PoliceAlertScreen> {
               ? (data['etaSeconds'] as num).toInt()
               : null;
           _ambulanceId = (data['ambulanceId'] ?? '').toString();
-          _info =
-              alert ? 'Ambulance aa rahi hai!' : 'Koi alert nahi - sab normal';
+          _info = alert ? 'Ambulance approaching!' : 'No alerts - all normal';
         });
         _handleSiren(alert && siren);
       } else {
         setState(() => _info = 'Server error: ${res.statusCode}');
       }
     } catch (e) {
-      setState(() => _info = 'Server se connect nahi ho paya');
+      setState(() => _info = 'Cannot connect to server');
     }
   }
 
-  // Siren: phone vibrate + alert sound har 1 second par
+  // Siren: phone vibration + alert sound every 1 second
   void _handleSiren(bool on) {
     if (on && _sirenTimer == null) {
       _sirenTimer = Timer.periodic(const Duration(seconds: 1), (_) {
@@ -638,7 +637,7 @@ class _PoliceAlertScreenState extends State<PoliceAlertScreen> {
                 Text(_siren ? '🔊 SIREN ON' : '🔇 Siren off',
                     style: const TextStyle(fontSize: 20, color: Colors.white)),
                 const SizedBox(height: 8),
-                const Text('Traffic clear karein!',
+                const Text('Clear the traffic!',
                     style: TextStyle(fontSize: 22, color: Colors.yellow)),
               ],
             ],
