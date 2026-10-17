@@ -13,8 +13,8 @@ import 'package:latlong2/latlong.dart';
 // ============================================================
 // Backend server address.
 // PC demo:            http://localhost:5000
-// Phone on same WiFi: http://<PC-IP>:5000  (e.g. http://192.168.1.5:5000)
-const String baseUrl = 'http://localhost:5000';
+// Phone on same WiFi: http://<PC-IP>:5000  (e.g. http://10.146.52.87:5000)
+const String baseUrl = 'http://10.146.52.87:5000';
 
 // Junctions for route selection (edit as needed)
 const List<String> allJunctions = [
